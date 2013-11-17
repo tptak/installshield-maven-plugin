@@ -1,0 +1,19 @@
+<project name="InstallShield Maven Plugin">
+    <bannerLeft>
+        <name>${project.name}</name>
+    </bannerLeft>
+    <bannerRight>
+        <src></src>
+    </bannerRight>
+
+    <body>
+        <menu name="Overview">
+            <item name="Introduction" href="index.html"/>
+            <item name="Usage" href="usage.html"/>
+            <item name="Goals" href="plugin-info.html"/>
+            <item name="FAQ" href="faq.html"/>
+            
+        </menu>
+        <menu ref="reports" />
+    </body>
+</project>
