@@ -14,9 +14,6 @@
 	<organization>
 		<name>Tomasz Ptak</name>
 	</organization>
-	<scm>
-		<developerConnection>Tomasz Ptak</developerConnection>
-	</scm>
 	<issueManagement>
 		<url>https://github.com/tptak/installshield-maven-plugin</url>
 	</issueManagement>
