@@ -149,6 +149,35 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jxr-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <configuration>
+                    <linkXRef>true</linkXRef>
+                    <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
+                    <minimumTokens>100</minimumTokens>
+                    <targetJdk>1.6</targetJdk>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <configuration>
+                    <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+                    <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <configuration>
+                    <xmlOutput>true</xmlOutput>
+                    <threshold>Low</threshold>
+                    <effort>Max</effort>
+                    <debug>false</debug>
+                    <relaxed>false</relaxed>
+                </configuration>
+            </plugin>
         </plugins>
     </reporting>
 
