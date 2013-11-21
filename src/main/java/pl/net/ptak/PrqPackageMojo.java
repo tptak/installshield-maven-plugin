@@ -35,7 +35,7 @@ import org.codehaus.plexus.archiver.zip.ZipArchiver;
 /**
  * @author Tomasz Ptak
  */
-@Mojo( name = "package" )
+@Mojo( name = "prq-package" )
 public class PrqPackageMojo
     extends AbstractMojo
 {
@@ -75,10 +75,11 @@ public class PrqPackageMojo
     public void execute()
         throws MojoExecutionException, MojoFailureException
     {
+        File output = new File( String.format( "%s/%s.prq", targetFolder, finalName ) );
+        getLog().info( String.format( "Packaging data from %s to %s", prePackageFolder, output.getName() ) );
         DefaultFileSet fileSet = new DefaultFileSet();
         fileSet.setDirectory( prePackageFolder );
         zipArchiver.addFileSet( fileSet );
-        File output = new File( String.format( "%s/%s.prq", targetFolder, finalName ) );
         zipArchiver.setDestFile( output );
         try
         {
@@ -92,5 +93,6 @@ public class PrqPackageMojo
         }
 
         project.getArtifact().setFile( output );
+        getLog().info( "Done packaging" );
     }
 }

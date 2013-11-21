@@ -17,10 +17,10 @@
                         pl.net.ptak:installshield-maven-plugin:build-is-project
                     </compile>
                     <prepackage>
-                        pl.net.ptak:installshield-maven-plugin:prepackage
+                        pl.net.ptak:installshield-maven-plugin:prq-prepackage
                     </prepackage>
                     <package>
-                        pl.net.ptak:installshield-maven-plugin:package
+                        pl.net.ptak:installshield-maven-plugin:prq-package
                     </package>
                     <install>
                         org.apache.maven.plugins:maven-install-plugin:install

@@ -32,7 +32,7 @@ import org.codehaus.plexus.util.FileUtils;
 /**
  * @author Tomasz Ptak
  */
-@Mojo( name = "prepackage" )
+@Mojo( name = "prq-prepackage" )
 public class PrqPrePackageMojo
     extends AbstractMojo
 {
@@ -66,7 +66,7 @@ public class PrqPrePackageMojo
     public void execute()
         throws MojoExecutionException, MojoFailureException
     {
-
+        getLog().info( String.format( "Beginning preparation of data in folder %s", prePackageFolder.getName() ) );
         if ( !prePackageFolder.exists() )
         {
             prePackageFolder.mkdirs();
@@ -106,6 +106,7 @@ public class PrqPrePackageMojo
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
         }
+        getLog().info( "Done prepackaging" );
     }
 
 }
