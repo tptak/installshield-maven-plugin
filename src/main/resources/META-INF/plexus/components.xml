@@ -16,9 +16,9 @@
                     <compile>
                         pl.net.ptak:installshield-maven-plugin:build-is-project
                     </compile>
-                    <prepackage>
+                    <prepare-package>
                         pl.net.ptak:installshield-maven-plugin:prq-prepackage
-                    </prepackage>
+                    </prepare-package>
                     <package>
                         pl.net.ptak:installshield-maven-plugin:prq-package
                     </package>
