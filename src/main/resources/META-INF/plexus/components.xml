@@ -16,9 +16,18 @@
                     <compile>
                         pl.net.ptak:installshield-maven-plugin:build-is-project
                     </compile>
-                    <package></package>
-                    <install></install>
-                    <deploy></deploy>
+                    <prepackage>
+                        pl.net.ptak:installshield-maven-plugin:prepackage
+                    </prepackage>
+                    <package>
+                        pl.net.ptak:installshield-maven-plugin:package
+                    </package>
+                    <install>
+                        org.apache.maven.plugins:maven-install-plugin:install
+                    </install>
+                    <deploy>
+                        org.apache.maven.plugins:maven-deploy-plugin:deploy
+                    </deploy>
                 </phases>
             </configuration>
         </component>

@@ -65,7 +65,7 @@ public class InstallShieldBuildMojo
      * Verifies that configuration is satisfied to bild the project and builds it.
      * 
      * @throws MojoExecutionException when plugin is misconfigured
-     * @throws MojoFailureException when plugin execution result was othere than expected
+     * @throws MojoFailureException when plugin execution result was other than expected
      * @see org.apache.maven.plugin.AbstractMojo#execute()
      */
     public void execute()
@@ -106,9 +106,16 @@ public class InstallShieldBuildMojo
 
         Executor exec = new DefaultExecutor();
 
+        getLog().debug( String.format( "IS Build Command to be executed: %s", installshieldCommandLine.toString() ) );
+
         try
         {
-            exec.execute( installshieldCommandLine );
+            int exitCode = exec.execute( installshieldCommandLine );
+            getLog().debug( String.format( "IS build exit code: %d", exitCode ) );
+            if ( exitCode != 0 )
+            {
+                throw new MojoFailureException( "Failed to build IS project" );
+            }
         }
         catch ( IOException e )
         {
@@ -117,6 +124,7 @@ public class InstallShieldBuildMojo
             getLog().debug( "Details to failure: ", e );
             throw new MojoFailureException( errorMessage );
         }
+
     }
 
     private String resolveCanonicalPath( File file )
