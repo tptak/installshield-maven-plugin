@@ -24,9 +24,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.AndFileFilter;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.commons.io.filefilter.NameFileFilter;
 import org.apache.commons.io.filefilter.NotFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
@@ -91,39 +89,52 @@ public class PrqPrePackageMojo
             throw new MojoFailureException( "InstallShield prerequisite file not found" );
         }
 
-        File fileToCopy = null;
+        File folderToCopy = null;
+        boolean folderCopied = false;
 
         try
         {
+            String folderName = "DiskImages";
             Iterator<File> iterator =
                 FileUtils.iterateFilesAndDirs( installshieldOutputDirectory,
                                                new NotFileFilter( TrueFileFilter.INSTANCE ),
-                                               new AndFileFilter( DirectoryFileFilter.INSTANCE,
-                                                                  new NameFileFilter( "DiskImages" ) ) );
+                                               DirectoryFileFilter.INSTANCE );
 
-            if ( iterator.hasNext() )
+            while ( iterator.hasNext() )
             {
-                fileToCopy = iterator.next();
-                getLog().info( String.format( "Preparing %s for packaging", fileToCopy.getCanonicalPath() ) );
-                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( fileToCopy, prePackageFolder );
+                folderToCopy = iterator.next();
+                if ( folderToCopy.getName().equalsIgnoreCase( folderName ) )
+                {
+                    getLog().info( String.format( "Preparing %s for packaging", folderToCopy.getCanonicalPath() ) );
+                    org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( folderToCopy, prePackageFolder );
+                    folderCopied = true;
+                    break;
+                }
             }
-            else
+
+            if ( !folderCopied )
             {
-                String message = "DiskImages folder not found within the InstallShieldOutput";
+                String message = String.format( "%s folder not found within the InstallShieldOutput", folderName );
                 getLog().error( message );
                 throw new MojoFailureException( message );
             }
 
-            if ( iterator.hasNext() )
+            while ( iterator.hasNext() )
             {
-                String message =
-                    "More than one DiskImages folder found within the InstallShieldOutput, the first one will be used";
-                getLog().warn( message );
+                folderToCopy = iterator.next();
+                if ( folderToCopy.getName().equalsIgnoreCase( folderName ) )
+                {
+                    String message =
+                        String.format( "More than one %s folder found within the InstallShieldOutput, "
+                            + "the first one will be used and the rest ignored", folderName );
+                    getLog().warn( message );
+                    break;
+                }
             }
         }
         catch ( IOException e )
         {
-            String message = String.format( "Failed to copy %s to %s", fileToCopy, prePackageFolder );
+            String message = String.format( "Failed to copy %s to %s", folderToCopy, prePackageFolder );
             String shortMessage = "Failed to copy resources";
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
