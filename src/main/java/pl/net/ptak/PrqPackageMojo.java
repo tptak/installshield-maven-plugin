@@ -75,7 +75,7 @@ public class PrqPackageMojo
     public void execute()
         throws MojoExecutionException, MojoFailureException
     {
-        File output = new File( String.format( "%s/%s.prq", targetFolder, finalName ) );
+        File output = new File( String.format( "%s/%s.prz", targetFolder, finalName ) );
         getLog().info( String.format( "Packaging data from %s to %s", prePackageFolder, output.getName() ) );
         DefaultFileSet fileSet = new DefaultFileSet();
         fileSet.setDirectory( prePackageFolder );

@@ -21,13 +21,19 @@ package pl.net.ptak;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.AndFileFilter;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.NameFileFilter;
+import org.apache.commons.io.filefilter.NotFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.util.FileUtils;
 
 /**
  * @author Tomasz Ptak
@@ -86,7 +92,29 @@ public class PrqPrePackageMojo
         }
         try
         {
-            FileUtils.copyDirectory( installshieldOutputDirectory, prePackageFolder );
+            Iterator<File> iterator =
+                FileUtils.iterateFilesAndDirs( installshieldOutputDirectory,
+                                               new NotFileFilter( TrueFileFilter.INSTANCE ),
+                                               new AndFileFilter( DirectoryFileFilter.INSTANCE,
+                                                                  new NameFileFilter( "DiskImages" ) ) );
+
+            if ( iterator.hasNext() )
+            {
+                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( iterator.next(), prePackageFolder );
+            }
+            else
+            {
+                String message = "DiskImages folder not found within the InstallShieldOutput";
+                getLog().error( message );
+                throw new MojoFailureException( message );
+            }
+
+            if ( iterator.hasNext() )
+            {
+                String message =
+                    "More than one DiskImages folder found within the InstallShieldOutput, the first one will be used";
+                getLog().warn( message );
+            }
         }
         catch ( IOException e )
         {
@@ -97,7 +125,7 @@ public class PrqPrePackageMojo
         }
         try
         {
-            FileUtils.copyFileToDirectory( prerequisite, prePackageFolder );
+            org.codehaus.plexus.util.FileUtils.copyFileToDirectory( prerequisite, prePackageFolder );
         }
         catch ( IOException e )
         {
