@@ -90,6 +90,9 @@ public class PrqPrePackageMojo
             getLog().error( String.format( "Prq File available: %b", prerequisite.exists() ) );
             throw new MojoFailureException( "InstallShield prerequisite file not found" );
         }
+
+        File fileToCopy = null;
+
         try
         {
             Iterator<File> iterator =
@@ -100,7 +103,9 @@ public class PrqPrePackageMojo
 
             if ( iterator.hasNext() )
             {
-                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( iterator.next(), prePackageFolder );
+                fileToCopy = iterator.next();
+                getLog().info( String.format( "Preparing %s for packaging", fileToCopy.getCanonicalPath() ) );
+                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( fileToCopy, prePackageFolder );
             }
             else
             {
@@ -118,18 +123,19 @@ public class PrqPrePackageMojo
         }
         catch ( IOException e )
         {
-            String message = String.format( "Failed to copy %s to %s", installshieldOutputDirectory, prePackageFolder );
+            String message = String.format( "Failed to copy %s to %s", fileToCopy, prePackageFolder );
             String shortMessage = "Failed to copy resources";
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
         }
         try
         {
+            getLog().info( String.format( "Preparing %s for packaging", prerequisite.getCanonicalPath() ) );
             org.codehaus.plexus.util.FileUtils.copyFileToDirectory( prerequisite, prePackageFolder );
         }
         catch ( IOException e )
         {
-            String message = String.format( "Failed to copy %s to %s", installshieldOutputDirectory, prePackageFolder );
+            String message = String.format( "Failed to copy %s to %s", prerequisite, prePackageFolder );
             String shortMessage = "Failed to copy resources";
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );

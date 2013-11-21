@@ -95,7 +95,7 @@ public class InstallShieldBuildMojo
 
         String canonicalOutputDirectoryPath = resolveCanonicalPath( installshieldOutputDirectory );
 
-        getLog().info( String.format( "Output will be placed in %s", canonicalProjectFilePath ) );
+        getLog().info( String.format( "Output will be placed in %s", canonicalOutputDirectoryPath ) );
 
         CommandLine installshieldCommandLine = new CommandLine( installshieldExecutable );
 
