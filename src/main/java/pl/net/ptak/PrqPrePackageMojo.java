@@ -55,6 +55,13 @@ public class PrqPrePackageMojo
     private File prePackageFolder;
 
     /**
+     * The folder in which data will be placed for packaging
+     */
+    @Parameter( defaultValue = "${project.build.directory}/${project.artifactId}/${project.artifactId}",
+                    property = "prePackageInstallerSubFolder", readonly = true, required = true )
+    private File prePackageInstallerSubFolder;
+
+    /**
      * The prerequisite file to be included
      */
     @Parameter( defaultValue = "${project.artifactId}.prq", property = "prqFile", required = true )
@@ -74,6 +81,7 @@ public class PrqPrePackageMojo
         if ( !prePackageFolder.exists() )
         {
             prePackageFolder.mkdirs();
+            prePackageInstallerSubFolder.mkdirs();
         }
         if ( !installshieldOutputDirectory.exists() )
         {
@@ -106,7 +114,8 @@ public class PrqPrePackageMojo
                 if ( folderToCopy.getName().equalsIgnoreCase( folderName ) )
                 {
                     getLog().info( String.format( "Preparing %s for packaging", folderToCopy.getCanonicalPath() ) );
-                    org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( folderToCopy, prePackageFolder );
+                    org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( folderToCopy,
+                                                                               prePackageInstallerSubFolder );
                     folderCopied = true;
                     break;
                 }
@@ -134,7 +143,7 @@ public class PrqPrePackageMojo
         }
         catch ( IOException e )
         {
-            String message = String.format( "Failed to copy %s to %s", folderToCopy, prePackageFolder );
+            String message = String.format( "Failed to copy %s to %s", folderToCopy, prePackageInstallerSubFolder );
             String shortMessage = "Failed to copy resources";
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
