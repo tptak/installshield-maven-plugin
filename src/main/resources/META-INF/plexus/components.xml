@@ -9,7 +9,11 @@
             <configuration>
                 <phases>
                     <validate></validate>
-                    <generate-sources></generate-sources>
+                    <generate-sources>
+                        pl.net.ptak:installshield-maven-plugin:prepare-dependencies,
+                        org.apache.maven.plugins:maven-dependency-plugin:2.8:copy-dependencies,
+                        org.apache.maven.plugins:maven-dependency-plugin:2.8:unpack-dependencies
+                    </generate-sources>
                     <process-sources></process-sources>
                     <generate-resources></generate-resources>
                     <process-resources></process-resources>

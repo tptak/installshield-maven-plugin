@@ -114,8 +114,12 @@ public class PrqPrePackageMojo
                 if ( folderToCopy.getName().equalsIgnoreCase( folderName ) )
                 {
                     getLog().info( String.format( "Preparing %s for packaging", folderToCopy.getCanonicalPath() ) );
-                    org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( folderToCopy,
-                                                                               prePackageInstallerSubFolder );
+
+                    File diskImagesTarget = new File( prePackageInstallerSubFolder, folderName );
+
+                    diskImagesTarget.mkdirs();
+
+                    org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( folderToCopy, diskImagesTarget );
                     folderCopied = true;
                     break;
                 }
