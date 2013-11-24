@@ -89,6 +89,11 @@
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.twdata.maven</groupId>
+            <artifactId>mojo-executor</artifactId>
+            <version>2.1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
