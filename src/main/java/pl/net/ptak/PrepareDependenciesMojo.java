@@ -38,13 +38,14 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 /**
  * @author Tomasz Ptak
  */
-@Mojo( name = "prepare-dependencies" )
+@Mojo( name = "prepare-dependencies", requiresDependencyResolution = ResolutionScope.COMPILE )
 public class PrepareDependenciesMojo
     extends AbstractMojo
 {

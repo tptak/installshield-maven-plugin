@@ -79,10 +79,10 @@ public class PrqPackageMojo
         getLog().info( String.format( "Packaging data from %s to %s", prePackageFolder, output.getName() ) );
         DefaultFileSet fileSet = new DefaultFileSet();
         fileSet.setDirectory( prePackageFolder );
-        zipArchiver.addFileSet( fileSet );
-        zipArchiver.setDestFile( output );
         try
         {
+            zipArchiver.addFileSet( fileSet );
+            zipArchiver.setDestFile( output );
             zipArchiver.createArchive();
         }
         catch ( Exception e )
