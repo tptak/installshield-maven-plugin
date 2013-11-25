@@ -21,15 +21,17 @@ package pl.net.ptak;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
+import java.io.File;
+import java.util.Collection;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
@@ -40,7 +42,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+
+import pl.net.ptak.helpers.LoggerImplementation;
 
 /**
  * @author Tomasz Ptak
@@ -50,11 +55,19 @@ public class PrepareDependenciesMojo
     extends AbstractMojo
 {
 
+
     @Parameter( defaultValue = "${project}", readonly = true, required = true )
     private MavenProject project;
 
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession session;
+
+    /**
+     * The folder in which data will be placed for packaging
+     */
+    @Parameter( defaultValue = "${project.build.directory}/dependency", property = "dependencyFolder",
+                    readonly = true, required = true )
+    private File dependencyFolder;
 
     @Component( role = BuildPluginManager.class )
     private BuildPluginManager pluginManager;
@@ -71,10 +84,19 @@ public class PrepareDependenciesMojo
     {
         executeMojoWithLogs( "org.apache.maven.plugins", "maven-dependency-plugin", "2.8", "copy-dependencies",
                              configuration() );
-        executeMojoWithLogs( "org.apache.maven.plugins", "maven-dependency-plugin", "2.8", "unpack-dependencies",
-                             configuration(
-                             element( name( "skip" ), "true" )
-                             ) );
+
+        getLog().info( "Unpacking prz files" );
+        String[] flatUnpackExtensions = { "prz", };
+        Collection<File> flatUnpackFiles = FileUtils.listFiles( dependencyFolder, flatUnpackExtensions, false );
+
+        for ( File flatUnpackFile : flatUnpackFiles )
+        {
+            getLog().info( String.format( "Unpacking %s", flatUnpackFile.getName() ) );
+            ZipUnArchiver unpacker = new ZipUnArchiver( flatUnpackFile );
+            unpacker.setDestDirectory( dependencyFolder );
+            unpacker.enableLogging( new LoggerImplementation( getLog() ) );
+            unpacker.extract();
+        }
     }
 
     private void executeMojoWithLogs( String groupId, String artifactId, String version, String goal,
