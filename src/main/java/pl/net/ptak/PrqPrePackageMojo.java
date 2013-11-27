@@ -62,6 +62,13 @@ public class PrqPrePackageMojo
     private File prePackageInstallerSubFolder;
 
     /**
+     * A folder holding static files within the target directory.
+     */
+    @Parameter( defaultValue = "${project.build.directory}/static", property = "staticFilesTargetFolder",
+                    readonly = true, required = true )
+    private File staticFilesTargetFolder;
+
+    /**
      * The prerequisite file to be included
      */
     @Parameter( defaultValue = "${project.artifactId}.prq", property = "prqFile", required = true )
@@ -86,7 +93,7 @@ public class PrqPrePackageMojo
         if ( !installshieldOutputDirectory.exists() )
         {
             getLog().error( String.format( "IS Project Build Output available: %b",
-                                           installshieldOutputDirectory.exists() ) );
+                installshieldOutputDirectory.exists() ) );
             throw new MojoFailureException( "InstallShield project file not found" );
         }
 
@@ -105,8 +112,8 @@ public class PrqPrePackageMojo
             String folderName = "DiskImages";
             Iterator<File> iterator =
                 FileUtils.iterateFilesAndDirs( installshieldOutputDirectory,
-                                               new NotFileFilter( TrueFileFilter.INSTANCE ),
-                                               DirectoryFileFilter.INSTANCE );
+                    new NotFileFilter( TrueFileFilter.INSTANCE ),
+                    DirectoryFileFilter.INSTANCE );
 
             while ( iterator.hasNext() )
             {
@@ -152,6 +159,29 @@ public class PrqPrePackageMojo
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
         }
+
+        try
+        {
+            if ( staticFilesTargetFolder.exists() )
+            {
+                File staticFilesCopyDestination = new File( prePackageInstallerSubFolder, "static" );
+                if ( !staticFilesCopyDestination.exists() )
+                {
+                    staticFilesCopyDestination.mkdirs();
+                }
+                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( staticFilesTargetFolder,
+                    staticFilesCopyDestination );
+            }
+        }
+        catch ( IOException e )
+        {
+            String message =
+                String.format( "Failed to copy %s to %s", staticFilesTargetFolder, prePackageInstallerSubFolder );
+            String shortMessage = "Failed to copy resources";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+
         try
         {
             getLog().info( String.format( "Preparing %s for packaging", prerequisite.getCanonicalPath() ) );

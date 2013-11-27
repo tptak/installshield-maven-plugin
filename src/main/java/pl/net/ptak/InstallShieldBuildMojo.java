@@ -49,10 +49,23 @@ public class InstallShieldBuildMojo
     private File installshieldOutputDirectory;
 
     /**
-     * Location of the InstallShield project file.
+     * Project value setting. If not empty, this is the value to which version parameter is set.<br>
      */
-    @Parameter( property = "installshieldProjectFile", defaultValue = "${project.artifactId}.ism", required = true )
+    @Parameter( defaultValue = "${project.version}", property = "version" )
+    private String version;
+
+    /**
+     * Location of the InstallShield project file. If empty, there will be no InstallShield build, everything else
+     * (dependency preparation, prepackaging, packaging) will be done normally.
+     */
+    @Parameter( property = "installshieldProjectFile", defaultValue = "${project.artifactId}.ism" )
     private File installshieldProjectFile;
+
+    /**
+     * Should the build fail if isProjectFile is not found? Handy when you have a prerequisite with binary project
+     */
+    @Parameter( property = "failWhenNoInstallshieldFile", defaultValue = "true", required = true )
+    private boolean failWhenNoInstallshieldFile;
 
     /**
      * Where to look for InstallShield executable. By default it is assumed that ISCmdBld.exe is put on the Path
@@ -82,47 +95,59 @@ public class InstallShieldBuildMojo
             installshieldOutputDirectory.mkdirs();
         }
 
-        if ( !installshieldProjectFile.exists() )
+        if ( ( installshieldProjectFile == null || !installshieldProjectFile.exists() ) )
         {
-
-            getLog().error( String.format( "IS Project File available: %b", installshieldProjectFile.exists() ) );
-            throw new MojoFailureException( "InstallShield project file not found" );
-        }
-
-        String canonicalProjectFilePath = resolveCanonicalPath( installshieldProjectFile );
-
-        getLog().info( String.format( "About to build file %s", canonicalProjectFilePath ) );
-
-        String canonicalOutputDirectoryPath = resolveCanonicalPath( installshieldOutputDirectory );
-
-        getLog().info( String.format( "Output will be placed in %s", canonicalOutputDirectoryPath ) );
-
-        CommandLine installshieldCommandLine = new CommandLine( installshieldExecutable );
-
-        installshieldCommandLine.addArgument( "-p" );
-        installshieldCommandLine.addArgument( canonicalProjectFilePath );
-        installshieldCommandLine.addArgument( "-b" );
-        installshieldCommandLine.addArgument( canonicalOutputDirectoryPath );
-
-        Executor exec = new DefaultExecutor();
-
-        getLog().debug( String.format( "IS Build Command to be executed: %s", installshieldCommandLine.toString() ) );
-
-        try
-        {
-            int exitCode = exec.execute( installshieldCommandLine );
-            getLog().debug( String.format( "IS build exit code: %d", exitCode ) );
-            if ( exitCode != 0 )
+            if ( failWhenNoInstallshieldFile )
             {
-                throw new MojoFailureException( "Failed to build IS project" );
+                getLog().error( String.format( "IS Project File available: %b", installshieldProjectFile.exists() ) );
+                throw new MojoFailureException( "InstallShield project file not found" );
+            }
+            else
+            {
+                getLog().info( "IS Project File not found. IS build skipped" );
             }
         }
-        catch ( IOException e )
+        else
         {
-            String errorMessage = "Failed to execute InstallShield build";
-            getLog().error( errorMessage );
-            getLog().debug( "Details to failure: ", e );
-            throw new MojoFailureException( errorMessage );
+
+            String canonicalProjectFilePath = resolveCanonicalPath( installshieldProjectFile );
+
+            getLog().info( String.format( "About to build file %s", canonicalProjectFilePath ) );
+
+            String canonicalOutputDirectoryPath = resolveCanonicalPath( installshieldOutputDirectory );
+
+            getLog().info( String.format( "Output will be placed in %s", canonicalOutputDirectoryPath ) );
+
+            CommandLine installshieldCommandLine = new CommandLine( installshieldExecutable );
+
+            addCmdLnArguments( installshieldCommandLine, "-p", canonicalProjectFilePath );
+            addCmdLnArguments( installshieldCommandLine, "-b", canonicalOutputDirectoryPath );
+            if ( null != version && !version.isEmpty() )
+            {
+                addCmdLnArguments( installshieldCommandLine, "-y", version );
+
+            }
+            Executor exec = new DefaultExecutor();
+
+            getLog().debug(
+                String.format( "IS Build Command to be executed: %s", installshieldCommandLine.toString() ) );
+
+            try
+            {
+                int exitCode = exec.execute( installshieldCommandLine );
+                getLog().debug( String.format( "IS build exit code: %d", exitCode ) );
+                if ( exitCode != 0 )
+                {
+                    throw new MojoFailureException( "Failed to build IS project" );
+                }
+            }
+            catch ( IOException e )
+            {
+                String errorMessage = "Failed to execute InstallShield build";
+                getLog().error( errorMessage );
+                getLog().debug( "Details to failure: ", e );
+                throw new MojoFailureException( errorMessage );
+            }
         }
 
     }
@@ -141,6 +166,11 @@ public class InstallShieldBuildMojo
             getLog().debug( "Something is wrong with the project file path", e );
             throw new MojoFailureException( errorMessage );
         }
+    }
+
+    private void addCmdLnArguments( CommandLine cl, String... params )
+    {
+        cl.addArguments( params );
     }
 
 }

@@ -75,6 +75,25 @@ public class PrepareDependenciesMojo
     private File dependencyFolder;
 
     /**
+     * A folder holding static files to be provided as dependencies for the project.<br>
+     * These files are copied to ${staticFilesTargetFolder} with their structure preserved. <br>
+     * Useful when you want to maintain a prerequisite with an exe file only, or with bat and exe.<br>
+     * These are different from standard resources as they are copied to target directory and will make it to prz
+     * archive within the ${artifactId}/static subfolder.<br>
+     * The rule of thumb here is to refer to files in ${staticFilesTargetFolder} when working with a prerequisite file.
+     */
+    @Parameter( defaultValue = "${project.source.directory}/static", property = "staticFilesFolder",
+                    readonly = true, required = true )
+    private File staticFilesFolder;
+
+    /**
+     * A folder holding static files within the target directory.
+     */
+    @Parameter( defaultValue = "${project.build.directory}/static", property = "staticFilesTargetFolder",
+                    readonly = true, required = true )
+    private File staticFilesTargetFolder;
+
+    /**
      * List of artifact to unzip. This is done by simple startsWith comparison on Artifact identifier in form
      * groupId:artifactId:type:version. If you enter an empty unzip, or the list is empty or not provided, nothing will
      * be extracted.
@@ -170,6 +189,31 @@ public class PrepareDependenciesMojo
             getLog().info( "Nothing to unzip" );
         }
 
+        try
+        {
+            if ( staticFilesFolder.exists() )
+            {
+                getLog().info( "Copy static resources" );
+                if ( !staticFilesTargetFolder.exists() )
+                {
+                    staticFilesTargetFolder.mkdirs();
+                }
+                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( staticFilesFolder,
+                    staticFilesTargetFolder );
+            }
+            else
+            {
+                getLog().info( "No static resources to copy" );
+            }
+        }
+        catch ( IOException e )
+        {
+            String message =
+                String.format( "Failed to copy %s to %s", staticFilesFolder, staticFilesTargetFolder );
+            String shortMessage = "Failed to copy resources";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
     }
 
     private void executeMojoWithLogs( String groupId, String artifactId, String version, String goal,
