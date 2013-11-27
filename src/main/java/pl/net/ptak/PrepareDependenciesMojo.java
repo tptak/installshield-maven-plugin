@@ -82,7 +82,7 @@ public class PrepareDependenciesMojo
      * archive within the ${artifactId}/static subfolder.<br>
      * The rule of thumb here is to refer to files in ${staticFilesTargetFolder} when working with a prerequisite file.
      */
-    @Parameter( defaultValue = "${project.source.directory}/static", property = "staticFilesFolder",
+    @Parameter( defaultValue = "src/static", property = "staticFilesFolder",
                     readonly = true, required = true )
     private File staticFilesFolder;
 
