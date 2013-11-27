@@ -117,78 +117,84 @@ public class PrepareDependenciesMojo
         executeMojoWithLogs( "org.apache.maven.plugins", "maven-dependency-plugin", "2.8", "copy-dependencies",
             configuration() );
 
-        ZipUnArchiver unpacker = new ZipUnArchiver();
-        unpacker.enableLogging( new LoggerImplementation( getLog() ) );
-
-        getLog().info( "Unpacking prz files" );
-        String[] flatUnpackExtensions = { "prz", };
-        Collection<File> flatUnpackFiles = FileUtils.listFiles( dependencyFolder, flatUnpackExtensions, false );
-
-        unpacker.setDestDirectory( dependencyFolder );
-        for ( File flatUnpackFile : flatUnpackFiles )
+        if ( dependencyFolder.exists() )
         {
-            getLog().info( String.format( "Unpacking %s", flatUnpackFile.getName() ) );
-            unpacker.setSourceFile( flatUnpackFile );
-            unpacker.extract();
-        }
+            ZipUnArchiver unpacker = new ZipUnArchiver();
+            unpacker.enableLogging( new LoggerImplementation( getLog() ) );
 
-        if ( !( null == unzip || unzip.isEmpty() ) )
-        {
-            getLog().info( "Unpack zip-compressed files" );
-            Set<Artifact> artifacts = project.getArtifacts();
-            Map<String, String> targetFoldersForFiles = new HashMap<String, String>();
+            getLog().info( "Unpacking prz files" );
+            String[] flatUnpackExtensions = { "prz", };
+            Collection<File> flatUnpackFiles = FileUtils.listFiles( dependencyFolder, flatUnpackExtensions, false );
 
-            for ( Artifact artifact : artifacts )
+            unpacker.setDestDirectory( dependencyFolder );
+            for ( File flatUnpackFile : flatUnpackFiles )
             {
-                for ( String unzipSelection : unzip )
-                {
+                getLog().info( String.format( "Unpacking %s", flatUnpackFile.getName() ) );
+                unpacker.setSourceFile( flatUnpackFile );
+                unpacker.extract();
+            }
 
-                    if ( artifact.toString().startsWith( unzipSelection ) )
+            if ( !( null == unzip || unzip.isEmpty() ) )
+            {
+                getLog().info( "Unpack zip-compressed files" );
+                Set<Artifact> artifacts = project.getArtifacts();
+                Map<String, String> targetFoldersForFiles = new HashMap<String, String>();
+
+                for ( Artifact artifact : artifacts )
+                {
+                    for ( String unzipSelection : unzip )
                     {
-                        targetFoldersForFiles.put( artifact.getFile().getName(),
-                            String.format(
-                                "%s_%s",
-                                artifact.getArtifactId(),
-                                artifact.getType() ) );
+
+                        if ( artifact.toString().startsWith( unzipSelection ) )
+                        {
+                            targetFoldersForFiles.put( artifact.getFile().getName(),
+                                String.format(
+                                    "%s_%s",
+                                    artifact.getArtifactId(),
+                                    artifact.getType() ) );
+                        }
+                    }
+                }
+                if ( !targetFoldersForFiles.isEmpty() )
+                {
+                    Collection<File> subfolderUnpackFiles = FileUtils.listFiles( dependencyFolder, null, false );
+                    for ( File subfolderUnpackFile : subfolderUnpackFiles )
+                    {
+                        if ( targetFoldersForFiles.containsKey( subfolderUnpackFile.getName() ) )
+                        {
+                            File destDirectory = new File( dependencyFolder,
+                                                           targetFoldersForFiles.get( subfolderUnpackFile.getName() ) );
+                            try
+                            {
+                                getLog().info(
+                                    String.format( "Unpacking %s to %s", subfolderUnpackFile.getName(),
+                                        destDirectory.getCanonicalPath() ) );
+                                if ( !destDirectory.exists() )
+                                {
+                                    destDirectory.mkdirs();
+                                }
+                            }
+                            catch ( IOException e )
+                            {
+                                throw new MojoFailureException( "Failed to extract a zip file", e );
+                            }
+                            unpacker.setSourceFile( subfolderUnpackFile );
+                            unpacker.setDestDirectory(
+                                    destDirectory );
+                            unpacker.extract();
+                        }
                     }
                 }
             }
-            if ( !targetFoldersForFiles.isEmpty() )
+            else
             {
-                Collection<File> subfolderUnpackFiles = FileUtils.listFiles( dependencyFolder, null, false );
-                for ( File subfolderUnpackFile : subfolderUnpackFiles )
-                {
-                    if ( targetFoldersForFiles.containsKey( subfolderUnpackFile.getName() ) )
-                    {
-                        File destDirectory = new File( dependencyFolder,
-                                                       targetFoldersForFiles.get( subfolderUnpackFile.getName() ) );
-                        try
-                        {
-                            getLog().info(
-                                String.format( "Unpacking %s to %s", subfolderUnpackFile.getName(),
-                                    destDirectory.getCanonicalPath() ) );
-                            if ( !destDirectory.exists() )
-                            {
-                                destDirectory.mkdirs();
-                            }
-                        }
-                        catch ( IOException e )
-                        {
-                            throw new MojoFailureException( "Failed to extract a zip file", e );
-                        }
-                        unpacker.setSourceFile( subfolderUnpackFile );
-                        unpacker.setDestDirectory(
-                                destDirectory );
-                        unpacker.extract();
-                    }
-                }
+                getLog().info( "Nothing to unzip" );
             }
         }
         else
         {
-            getLog().info( "Nothing to unzip" );
+            getLog().info( "No dependencies to extract" );
         }
-
         try
         {
             if ( staticFilesFolder.exists() )
