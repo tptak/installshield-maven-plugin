@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.NotFileFilter;
@@ -75,6 +77,19 @@ public class PrqPrePackageMojo
     private File prerequisite;
 
     /**
+     * The folder in which data are placed for dependency resolution
+     */
+    @Parameter( defaultValue = "${project.build.directory}/dependency", property = "dependencyFolder",
+                    readonly = true, required = true )
+    private File dependencyFolder;
+
+    /**
+     * Should the build fail if isProjectFile is not found? Handy when you have a prerequisite with binary project
+     */
+    @Parameter( property = "failWhenNoInstallshieldFile", defaultValue = "true", required = true )
+    private boolean failWhenNoInstallshieldFile;
+
+    /**
      * This Mojo gathers all deliverables into one folder for packaging
      * 
      * @throws MojoExecutionException .
@@ -90,7 +105,7 @@ public class PrqPrePackageMojo
             prePackageFolder.mkdirs();
             prePackageInstallerSubFolder.mkdirs();
         }
-        if ( !installshieldOutputDirectory.exists() )
+        if ( !installshieldOutputDirectory.exists() && failWhenNoInstallshieldFile )
         {
             getLog().error( String.format( "IS Project Build Output available: %b",
                 installshieldOutputDirectory.exists() ) );
@@ -186,6 +201,9 @@ public class PrqPrePackageMojo
         {
             getLog().info( String.format( "Preparing %s for packaging", prerequisite.getCanonicalPath() ) );
             org.codehaus.plexus.util.FileUtils.copyFileToDirectory( prerequisite, prePackageFolder );
+            File targetPrqFile = new File( prePackageFolder, prerequisite.getName() );
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
         }
         catch ( IOException e )
         {

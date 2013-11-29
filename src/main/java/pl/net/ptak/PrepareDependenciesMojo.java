@@ -68,7 +68,7 @@ public class PrepareDependenciesMojo
     private MavenSession session;
 
     /**
-     * The folder in which data will be placed for packaging
+     * The folder in which data are placed for dependency resolution
      */
     @Parameter( defaultValue = "${project.build.directory}/dependency", property = "dependencyFolder",
                     readonly = true, required = true )
