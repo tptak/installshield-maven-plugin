@@ -23,7 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -34,6 +36,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * @author Tomasz Ptak
@@ -119,6 +126,108 @@ public class PrqPrePackageMojo
             throw new MojoFailureException( "InstallShield prerequisite file not found" );
         }
 
+        prepareBuildOutputForPackaging();
+
+        prepareStaticFilesForPackaging();
+
+        preparePrerequisiteForPackaging();
+
+        getLog().info( "Done prepackaging" );
+    }
+
+    private void preparePrerequisiteForPackaging()
+        throws MojoFailureException
+    {
+        try
+        {
+            getLog().info( String.format( "Preparing %s for packaging", prerequisite.getCanonicalPath() ) );
+            org.codehaus.plexus.util.FileUtils.copyFileToDirectory( prerequisite, prePackageFolder );
+            File targetPrqFile = new File( prePackageFolder, prerequisite.getName() );
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder docBuilder = factory.newDocumentBuilder();
+            Document doc = docBuilder.parse( targetPrqFile );
+
+            Element root = doc.getElementById( "SetupPrereq" );
+
+            NodeList filesElement = root.getElementsByTagName( "files" );
+
+            if ( filesElement.getLength() > 1 )
+            {
+                throw new MojoFailureException( "Incorrect prq syntax: too many files lists" );
+            }
+
+            Node filesList = filesElement.item( 0 );
+
+            if ( null != filesList )
+            {
+                NodeList files = filesList.getChildNodes();
+
+                for ( int i = 0; i < files.getLength(); i++ )
+                {
+                    Node fileNode = files.item( i );
+
+                    // TODO make this work
+                    // check existence of a file
+                    // prepare new relative path and update it
+                    // calculate new md5 checksum
+                    // calculate new size
+                }
+            }
+
+        }
+        catch ( IOException e )
+        {
+            String message = String.format( "Failed to copy %s to %s", prerequisite, prePackageFolder );
+            String shortMessage = "Failed to copy resources";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+        catch ( ParserConfigurationException e )
+        {
+            String message = "Failed to create prq file parser";
+            String shortMessage = "Failed to prepare prerequisite for packaging";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+        catch ( SAXException e )
+        {
+            String message = "Failed to modify prq file";
+            String shortMessage = "Failed to prepare prerequisite for packaging";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+    }
+
+    private void prepareStaticFilesForPackaging()
+        throws MojoFailureException
+    {
+        try
+        {
+            if ( staticFilesTargetFolder.exists() )
+            {
+                File staticFilesCopyDestination = new File( prePackageInstallerSubFolder, "static" );
+                if ( !staticFilesCopyDestination.exists() )
+                {
+                    staticFilesCopyDestination.mkdirs();
+                }
+                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( staticFilesTargetFolder,
+                    staticFilesCopyDestination );
+            }
+        }
+        catch ( IOException e )
+        {
+            String message =
+                String.format( "Failed to copy %s to %s", staticFilesTargetFolder, prePackageInstallerSubFolder );
+            String shortMessage = "Failed to copy resources";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+    }
+
+    private void prepareBuildOutputForPackaging()
+        throws MojoFailureException
+    {
         File folderToCopy = null;
         boolean folderCopied = false;
 
@@ -174,45 +283,6 @@ public class PrqPrePackageMojo
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
         }
-
-        try
-        {
-            if ( staticFilesTargetFolder.exists() )
-            {
-                File staticFilesCopyDestination = new File( prePackageInstallerSubFolder, "static" );
-                if ( !staticFilesCopyDestination.exists() )
-                {
-                    staticFilesCopyDestination.mkdirs();
-                }
-                org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( staticFilesTargetFolder,
-                    staticFilesCopyDestination );
-            }
-        }
-        catch ( IOException e )
-        {
-            String message =
-                String.format( "Failed to copy %s to %s", staticFilesTargetFolder, prePackageInstallerSubFolder );
-            String shortMessage = "Failed to copy resources";
-            getLog().debug( message, e );
-            throw new MojoFailureException( e, shortMessage, message );
-        }
-
-        try
-        {
-            getLog().info( String.format( "Preparing %s for packaging", prerequisite.getCanonicalPath() ) );
-            org.codehaus.plexus.util.FileUtils.copyFileToDirectory( prerequisite, prePackageFolder );
-            File targetPrqFile = new File( prePackageFolder, prerequisite.getName() );
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-        }
-        catch ( IOException e )
-        {
-            String message = String.format( "Failed to copy %s to %s", prerequisite, prePackageFolder );
-            String shortMessage = "Failed to copy resources";
-            getLog().debug( message, e );
-            throw new MojoFailureException( e, shortMessage, message );
-        }
-        getLog().info( "Done prepackaging" );
     }
 
 }
