@@ -82,6 +82,12 @@ public class PrqPrePackageMojo
     private File staticFilesTargetFolder;
 
     /**
+     * Target folder
+     */
+    @Parameter( defaultValue = "${project.build.directory}", readonly = true, required = true )
+    private File targetFolder;
+
+    /**
      * The prerequisite file to be included
      */
     @Parameter( defaultValue = "${project.artifactId}.prq", property = "prqFile", required = true )
@@ -94,11 +100,18 @@ public class PrqPrePackageMojo
                     readonly = true, required = true )
     private File dependencyFolder;
 
+
     /**
      * Should the build fail if isProjectFile is not found? Handy when you have a prerequisite with binary project
      */
     @Parameter( property = "failWhenNoInstallshieldFile", defaultValue = "true", required = true )
     private boolean failWhenNoInstallshieldFile;
+
+    /**
+     * This is a reference to a packaged DiskImages Folder. It is one of three possible sources of files referenced in a
+     * prerequisite.
+     */
+    private File packagedDiskImagesFolder = null;
 
     /**
      * This Mojo gathers all deliverables into one folder for packaging
@@ -186,11 +199,46 @@ public class PrqPrePackageMojo
                         throw new MojoFailureException( message );
                     }
 
-                    // TODO make this work
+                    String canonicalPath = dependencyFile.getCanonicalPath();
+
                     // check if the file is within the project structure (do not allow external files)
+                    if ( !canonicalPath.startsWith( targetFolder.getCanonicalPath() ) )
+                    {
+                        String message =
+                            String.format(
+                                "%s is not within the %s folder. You do NOT want to use files from outside this folder",
+                                dependencyFile, targetFolder );
+                        throw new MojoFailureException( message );
+                    }
+
                     // prepare new relative path and update it
-                    // calculate new md5 checksum
-                    // calculate new size
+                    if ( canonicalPath.startsWith( dependencyFolder.getCanonicalPath() ) )
+                    {
+                        // TODO move files referenced to output folder - and idea needed to make it properly
+                        // TODO update a path once you know where the files go
+                        // IS: ./target/output/dependency/....
+                        // SHOUD BE: ./target/${project.artifactId}/dependency/....
+                    }
+                    else if ( canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
+                    {
+                        // TODO update a path as needed
+                        // IS: ./target/output/something/something/DiskImages/....
+                        // SHOUD BE: ./target/${project.artifactId}/DiskImages/....
+                    }
+                    else if ( canonicalPath.startsWith( staticFilesTargetFolder.getCanonicalPath() ) )
+                    {
+                        // TODO update a path as needed
+                        // IS: ./target/static/....
+                        // SHOUD BE: ./target/${project.artifactId}/static/....
+                    }
+                    else
+                    {
+                        throw new MojoFailureException( String.format(
+                            "It is expected that referenced files come from either of these locations: %s, %s, %s",
+                            dependencyFolder, packagedDiskImagesFolder, staticFilesTargetFolder ) );
+                    }
+                    // TODO calculate new md5 checksum
+                    // TODO calculate new size
                 }
             }
 
@@ -304,6 +352,7 @@ public class PrqPrePackageMojo
 
                     org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( folderToCopy, diskImagesTarget );
                     folderCopied = true;
+                    packagedDiskImagesFolder = folderToCopy;
                     break;
                 }
             }
