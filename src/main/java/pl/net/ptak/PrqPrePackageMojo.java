@@ -22,6 +22,8 @@ package pl.net.ptak;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -36,8 +38,10 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -148,27 +152,42 @@ public class PrqPrePackageMojo
             DocumentBuilder docBuilder = factory.newDocumentBuilder();
             Document doc = docBuilder.parse( targetPrqFile );
 
-            Element root = doc.getElementById( "SetupPrereq" );
+            Element root = (Element) doc.getFirstChild();
+            NodeList filesElements = root.getElementsByTagName( "files" );
 
-            NodeList filesElement = root.getElementsByTagName( "files" );
-
-            if ( filesElement.getLength() > 1 )
+            if ( filesElements.getLength() > 1 )
             {
-                throw new MojoFailureException( "Incorrect prq syntax: too many files lists" );
+                throw new MojoFailureException( "There should be at most one files element" );
             }
 
-            Node filesList = filesElement.item( 0 );
-
-            if ( null != filesList )
+            if ( filesElements.getLength() == 1 )
             {
+                Node filesList = filesElements.item( 0 );
+
                 NodeList files = filesList.getChildNodes();
 
                 for ( int i = 0; i < files.getLength(); i++ )
                 {
                     Node fileNode = files.item( i );
 
+                    if ( !( fileNode instanceof Element ) )
+                    {
+                        continue;
+                    }
+
+                    NamedNodeMap fileAttributes = fileNode.getAttributes();
+
+                    File dependencyFile = getFileFromPrq( fileAttributes, i );
+
+                    if ( !dependencyFile.exists() )
+                    {
+                        String message =
+                            String.format( "%s is referenced in prq file, but it does not exist", dependencyFile );
+                        throw new MojoFailureException( message );
+                    }
+
                     // TODO make this work
-                    // check existence of a file
+                    // check if the file is within the project structure (do not allow external files)
                     // prepare new relative path and update it
                     // calculate new md5 checksum
                     // calculate new size
@@ -197,6 +216,39 @@ public class PrqPrePackageMojo
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
         }
+    }
+
+    private List<Node> getChildrenWithName( Node node, String elemName )
+    {
+        NodeList childNodes = node.getChildNodes();
+
+        List<Node> itemsList = new LinkedList<Node>();
+        for ( int i = 0; i < childNodes.getLength(); i++ )
+        {
+            Node childItem = childNodes.item( i );
+            if ( childItem.getLocalName().equals( elemName ) )
+            {
+                itemsList.add( childItem );
+            }
+
+        }
+        return itemsList;
+    }
+
+    /**
+     * @param fileAttributes
+     * @return
+     * @throws MojoFailureException
+     */
+    private File getFileFromPrq( NamedNodeMap fileAttributes, int index )
+        throws MojoFailureException
+    {
+        Attr filePath = (Attr) fileAttributes.getNamedItem( "LocalFile" );
+        if ( filePath == null )
+        {
+            throw new MojoFailureException( String.format( "No file location in prerequisite file %d", index ) );
+        }
+        return new File( filePath.getValue() );
     }
 
     private void prepareStaticFilesForPackaging()
@@ -256,7 +308,7 @@ public class PrqPrePackageMojo
                 }
             }
 
-            if ( !folderCopied )
+            if ( !folderCopied && failWhenNoInstallshieldFile )
             {
                 String message = String.format( "%s folder not found within the InstallShieldOutput", folderName );
                 getLog().error( message );
