@@ -75,6 +75,12 @@ public class PrqPrePackageMojo
     private File prePackageInstallerSubFolder;
 
     /**
+     * A prefix for setting new dependency relative path in prq
+     */
+    @Parameter( defaultValue = ".\\${project.artifactId}\\dependency", readonly = true, required = true )
+    private String relativePackageDependencySubFolderPrefix;
+
+    /**
      * A folder holding static files within the target directory.
      */
     @Parameter( defaultValue = "${project.build.directory}/static", property = "staticFilesTargetFolder",
@@ -190,7 +196,9 @@ public class PrqPrePackageMojo
 
                     NamedNodeMap fileAttributes = fileNode.getAttributes();
 
-                    File dependencyFile = getFileFromPrq( fileAttributes, i );
+                    Attr dependencyFileAttr = (Attr) fileAttributes.getNamedItem( "LocalFile" );
+
+                    File dependencyFile = getFileFromPrq( dependencyFileAttr, i );
 
                     if ( !dependencyFile.exists() )
                     {
@@ -214,10 +222,17 @@ public class PrqPrePackageMojo
                     // prepare new relative path and update it
                     if ( canonicalPath.startsWith( dependencyFolder.getCanonicalPath() ) )
                     {
-                        // TODO move files referenced to output folder - and idea needed to make it properly
-                        // TODO update a path once you know where the files go
                         // IS: ./target/output/dependency/....
                         // SHOUD BE: ./target/${project.artifactId}/dependency/....
+                        String relativeOutputPath =
+                            dependencyFile.getParentFile().getCanonicalPath()
+                                          .replaceFirst( dependencyFolder.getCanonicalPath(), "" );
+                        File copyTarget = new File( prePackageInstallerSubFolder, relativeOutputPath );
+                        FileUtils.copyFileToDirectory( dependencyFile, copyTarget );
+
+                        String newRelativePath = relativePackageDependencySubFolderPrefix + "\\" + relativeOutputPath;
+
+                        dependencyFileAttr.setValue( newRelativePath );
                     }
                     else if ( canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
                     {
@@ -288,10 +303,9 @@ public class PrqPrePackageMojo
      * @return
      * @throws MojoFailureException
      */
-    private File getFileFromPrq( NamedNodeMap fileAttributes, int index )
+    private File getFileFromPrq( Attr filePath, int index )
         throws MojoFailureException
     {
-        Attr filePath = (Attr) fileAttributes.getNamedItem( "LocalFile" );
         if ( filePath == null )
         {
             throw new MojoFailureException( String.format( "No file location in prerequisite file %d", index ) );
