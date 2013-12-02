@@ -20,10 +20,10 @@ package pl.net.ptak;
  */
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,6 +35,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.NotFileFilter;
@@ -213,50 +214,11 @@ public class PrqPrePackageMojo
                         throw new MojoFailureException( message );
                     }
 
-                    String canonicalPath = dependencyFile.getCanonicalPath();
-
-                    // check if the file is within the project structure (do not allow external files)
-                    if ( !canonicalPath.startsWith( targetFolder.getCanonicalPath() ) )
-                    {
-                        String message =
-                            String.format(
-                                "%s is not within the %s folder. You do NOT want to use files from outside this folder",
-                                dependencyFile, targetFolder );
-                        throw new MojoFailureException( message );
-                    }
-
-                    // prepare new relative path and update it
-                    if ( canonicalPath.startsWith( dependencyFolder.getCanonicalPath() ) )
-                    {
-                        // IS: ./target/output/dependency/....
-                        // SHOUD BE: ./target/${project.artifactId}/dependency/....
-                        String relativeOutputPath =
-                            calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
-
-                        File copyTarget = new File( prePackageInstallerSubFolder, relativeOutputPath );
-                        FileUtils.copyFileToDirectory( dependencyFile, copyTarget );
-                    }
-                    else if ( canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
-                    {
-                        // IS: ./target/output/something/something/DiskImages/....
-                        // SHOUD BE: ./target/${project.artifactId}/DiskImages/....
-
-                        calculateAndSetNewRelativePath( dependencyFile, packagedDiskImagesFolder.getParentFile(),
-                            dependencyFileAttr );
-                    }
-                    else if ( canonicalPath.startsWith( staticFilesTargetFolder.getCanonicalPath() ) )
-                    {
-                        // IS: ./target/static/....
-                        // SHOUD BE: ./target/${project.artifactId}/static/....
-                        calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
-                    }
-                    else
-                    {
-                        throw new MojoFailureException( String.format(
-                            "It is expected that referenced files come from either of these locations: %s, %s, %s",
-                            dependencyFolder, packagedDiskImagesFolder, staticFilesTargetFolder ) );
-                    }
+                    // set new relative path to dependency
+                    setNewRelativePathForFile( dependencyFileAttr, dependencyFile );
                     // TODO calculate new md5 checksum
+                    Attr checkSumAttr = (Attr) fileAttributes.getNamedItem( "CheckSum" );
+                    setNewMd5ChecksumForFile( checkSumAttr, dependencyFile );
                     // TODO calculate new size
                 }
             }
@@ -305,6 +267,110 @@ public class PrqPrePackageMojo
         }
     }
 
+    /**
+     * @param dependencyFile
+     * @param dependencyFileAttr
+     */
+    private void setNewMd5ChecksumForFile( Attr dependencyFileAttr, File dependencyFile )
+        throws MojoFailureException
+    {
+        FileInputStream fileInputStream = null;
+        try
+        {
+            fileInputStream = new FileInputStream( dependencyFile );
+            String md5 = DigestUtils.md5Hex( fileInputStream );
+            dependencyFileAttr.setValue( md5.toUpperCase() );
+        }
+        catch ( FileNotFoundException e )
+        {
+            String message = String.format( "File %s not found", dependencyFile );
+            String shortMessage = "File not found";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+        catch ( IOException e )
+        {
+            String message = String.format( "Failed to calculate checksum for file %s", dependencyFile );
+            String shortMessage = "Failed to calculate checksum";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+        finally
+        {
+            try
+            {
+                fileInputStream.close();
+            }
+            catch ( IOException e )
+            {
+                String message = String.format( "Failed to close filestream for file %s", dependencyFile );
+                String shortMessage = "Failed to close filestream";
+                getLog().debug( message, e );
+                throw new MojoFailureException( e, shortMessage, message );
+            }
+        }
+    }
+
+    private String setNewRelativePathForFile( Attr dependencyFileAttr, File dependencyFile )
+        throws MojoFailureException
+    {
+        try
+        {
+            String canonicalPath = dependencyFile.getCanonicalPath();
+
+            // check if the file is within the project structure (do not allow external files)
+            if ( !canonicalPath.startsWith( targetFolder.getCanonicalPath() ) )
+            {
+                String message =
+                    String.format(
+                        "%s is not within the %s folder. You do NOT want to use files from outside this folder",
+                        dependencyFile, targetFolder );
+                throw new MojoFailureException( message );
+            }
+
+            // prepare new relative path and update it
+            if ( canonicalPath.startsWith( dependencyFolder.getCanonicalPath() ) )
+            {
+                // IS: ./target/output/dependency/....
+                // SHOUD BE: ./target/${project.artifactId}/dependency/....
+                String relativeOutputPath =
+                    calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
+
+                File copyTarget = new File( prePackageInstallerSubFolder, relativeOutputPath );
+                FileUtils.copyFileToDirectory( dependencyFile, copyTarget );
+            }
+            else if ( canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
+            {
+                // IS: ./target/output/something/something/DiskImages/....
+                // SHOUD BE: ./target/${project.artifactId}/DiskImages/....
+
+                calculateAndSetNewRelativePath( dependencyFile, packagedDiskImagesFolder.getParentFile(),
+                    dependencyFileAttr );
+            }
+            else if ( canonicalPath.startsWith( staticFilesTargetFolder.getCanonicalPath() ) )
+            {
+                // IS: ./target/static/....
+                // SHOUD BE: ./target/${project.artifactId}/static/....
+                calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
+            }
+            else
+            {
+                throw new MojoFailureException( String.format(
+                    "It is expected that referenced files come from either of these locations: %s, %s, %s",
+                    dependencyFolder, packagedDiskImagesFolder, staticFilesTargetFolder ) );
+            }
+            return canonicalPath;
+        }
+        catch ( IOException e )
+        {
+
+            String message = String.format( "Failed to prepare relative path for file %s", dependencyFile );
+            String shortMessage = "Failed to prepare relative path";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+    }
+
     private String calculateAndSetNewRelativePath( File dependencyFile, File relativePathRoot, Attr dependencyFileAttr )
         throws IOException
     {
@@ -317,23 +383,6 @@ public class PrqPrePackageMojo
         dependencyFileAttr.setValue( newRelativePath );
 
         return relativeOutputPath;
-    }
-
-    private List<Node> getChildrenWithName( Node node, String elemName )
-    {
-        NodeList childNodes = node.getChildNodes();
-
-        List<Node> itemsList = new LinkedList<Node>();
-        for ( int i = 0; i < childNodes.getLength(); i++ )
-        {
-            Node childItem = childNodes.item( i );
-            if ( childItem.getLocalName().equals( elemName ) )
-            {
-                itemsList.add( childItem );
-            }
-
-        }
-        return itemsList;
     }
 
     /**
