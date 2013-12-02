@@ -216,10 +216,12 @@ public class PrqPrePackageMojo
 
                     // set new relative path to dependency
                     setNewRelativePathForFile( dependencyFileAttr, dependencyFile );
-                    // TODO calculate new md5 checksum
+                    // calculate new md5 checksum
                     Attr checkSumAttr = (Attr) fileAttributes.getNamedItem( "CheckSum" );
                     setNewMd5ChecksumForFile( checkSumAttr, dependencyFile );
-                    // TODO calculate new size
+                    // calculate new size
+                    Attr fileSizeAttr = (Attr) fileAttributes.getNamedItem( "FileSize" );
+                    setNewSizeForFile( fileSizeAttr, dependencyFile );
                 }
             }
 
@@ -265,6 +267,15 @@ public class PrqPrePackageMojo
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
         }
+    }
+
+    /**
+     * @param fileSizeAttr
+     * @param dependencyFile
+     */
+    private void setNewSizeForFile( Attr fileSizeAttr, File dependencyFile )
+    {
+        fileSizeAttr.setValue( String.format( "0,%d", dependencyFile.length() ) );
     }
 
     /**
