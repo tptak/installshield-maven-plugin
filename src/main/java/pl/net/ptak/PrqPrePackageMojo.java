@@ -28,6 +28,12 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -77,8 +83,8 @@ public class PrqPrePackageMojo
     /**
      * A prefix for setting new dependency relative path in prq
      */
-    @Parameter( defaultValue = ".\\${project.artifactId}\\dependency", readonly = true, required = true )
-    private String relativePackageDependencySubFolderPrefix;
+    @Parameter( defaultValue = ".\\${project.artifactId}", readonly = true, required = true )
+    private String relativePackageSubFolderPrefix;
 
     /**
      * A folder holding static files within the target directory.
@@ -225,26 +231,24 @@ public class PrqPrePackageMojo
                         // IS: ./target/output/dependency/....
                         // SHOUD BE: ./target/${project.artifactId}/dependency/....
                         String relativeOutputPath =
-                            dependencyFile.getParentFile().getCanonicalPath()
-                                          .replaceFirst( dependencyFolder.getCanonicalPath(), "" );
+                            calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
+
                         File copyTarget = new File( prePackageInstallerSubFolder, relativeOutputPath );
                         FileUtils.copyFileToDirectory( dependencyFile, copyTarget );
-
-                        String newRelativePath = relativePackageDependencySubFolderPrefix + "\\" + relativeOutputPath;
-
-                        dependencyFileAttr.setValue( newRelativePath );
                     }
                     else if ( canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
                     {
-                        // TODO update a path as needed
                         // IS: ./target/output/something/something/DiskImages/....
                         // SHOUD BE: ./target/${project.artifactId}/DiskImages/....
+
+                        calculateAndSetNewRelativePath( dependencyFile, packagedDiskImagesFolder.getParentFile(),
+                            dependencyFileAttr );
                     }
                     else if ( canonicalPath.startsWith( staticFilesTargetFolder.getCanonicalPath() ) )
                     {
-                        // TODO update a path as needed
                         // IS: ./target/static/....
                         // SHOUD BE: ./target/${project.artifactId}/static/....
+                        calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
                     }
                     else
                     {
@@ -256,6 +260,12 @@ public class PrqPrePackageMojo
                     // TODO calculate new size
                 }
             }
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource( doc );
+            StreamResult result = new StreamResult( targetPrqFile );
+            transformer.transform( source, result );
 
         }
         catch ( IOException e )
@@ -279,6 +289,34 @@ public class PrqPrePackageMojo
             getLog().debug( message, e );
             throw new MojoFailureException( e, shortMessage, message );
         }
+        catch ( TransformerConfigurationException e )
+        {
+            String message = "Failed to prepare transformer for storing prq file";
+            String shortMessage = "Failed to prepare prerequisite for packaging";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+        catch ( TransformerException e )
+        {
+            String message = "Failed to run transformer for storing prq file";
+            String shortMessage = "Failed to prepare prerequisite for packaging";
+            getLog().debug( message, e );
+            throw new MojoFailureException( e, shortMessage, message );
+        }
+    }
+
+    private String calculateAndSetNewRelativePath( File dependencyFile, File relativePathRoot, Attr dependencyFileAttr )
+        throws IOException
+    {
+
+        String relativeOutputPath =
+            dependencyFile.getCanonicalPath()
+                          .substring( relativePathRoot.getCanonicalPath().length() );
+        String newRelativePath = relativePackageSubFolderPrefix + relativeOutputPath;
+
+        dependencyFileAttr.setValue( newRelativePath );
+
+        return relativeOutputPath;
     }
 
     private List<Node> getChildrenWithName( Node node, String elemName )
