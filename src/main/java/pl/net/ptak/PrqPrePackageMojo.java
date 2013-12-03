@@ -210,7 +210,8 @@ public class PrqPrePackageMojo
                     if ( !dependencyFile.exists() )
                     {
                         String message =
-                            String.format( "%s is referenced in prq file, but it does not exist", dependencyFile );
+                            String.format( "%s is referenced in prq file, but it does not exist",
+                                dependencyFile.getAbsolutePath() );
                         throw new MojoFailureException( message );
                     }
 
