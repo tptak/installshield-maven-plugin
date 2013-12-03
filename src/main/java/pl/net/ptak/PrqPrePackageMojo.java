@@ -121,6 +121,12 @@ public class PrqPrePackageMojo
     private boolean failWhenNoInstallshieldFile;
 
     /**
+     * A base directory for given project
+     */
+    @Parameter( defaultValue = "${basedir}", readonly = true, required = true )
+    private File basedir;
+
+    /**
      * This is a reference to a packaged DiskImages Folder. It is one of three possible sources of files referenced in a
      * prerequisite.
      */
@@ -409,7 +415,7 @@ public class PrqPrePackageMojo
         {
             throw new MojoFailureException( String.format( "No file location in prerequisite file %d", index ) );
         }
-        return new File( filePath.getValue() );
+        return new File( basedir, filePath.getValue() );
     }
 
     private void prepareStaticFilesForPackaging()
