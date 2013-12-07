@@ -4,13 +4,16 @@
 
     <groupId>pl.net.ptak</groupId>
     <artifactId>installshield-maven-plugin</artifactId>
-    <version>${is-mvn.version}${version.modifier}</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>InstallShield Maven Plugin</name>
     <description>This plugin serves as a helper tool for InstallShield projects development and dependency resolution.</description>
     <url>https://github.com/tptak/installshield-maven-plugin</url>
     <inceptionYear>2013</inceptionYear>
+    <organization>
+        <name>None</name>
+    </organization>
     <licenses>
         <license>
             <name>Apache 2.0</name>
@@ -44,8 +47,6 @@
     <properties>
         <scm.branch>master</scm.branch>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <is-mvn.version>0.0.1</is-mvn.version>
-        <version.modifier></version.modifier>
     </properties>
 
     <dependencies>
@@ -106,7 +107,9 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.11</version>
                 <configuration>
                     <configLocation>config/maven_checks.xml</configLocation>
                     <enableRulesSummary>false</enableRulesSummary>
@@ -225,12 +228,6 @@
     </reporting>
 
     <profiles>
-        <profile>
-            <id>dev</id>
-            <properties>
-                <version.modifier>-SNAPSHOT</version.modifier>
-            </properties>
-        </profile>
         <profile>
             <id>run-its</id>
             <build>

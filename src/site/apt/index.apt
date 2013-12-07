@@ -1,1 +1,11 @@
-This is a plugin aim of which is to organize creation of InstallShield setups by applying Maven concepts.
+Welcome
+
+ This is a plugin aim of which is to organize creation of InstallShield setups by applying some of the Maven concepts.
+ 
+ The main idea behind this project is to be able to build an installer by running good old safe and developer friendly:
+ 
++---
+mvn clean install
++---
+ 
+ Please note that the maturity of this project is super ultra low. Also the scope of functionality is rather narrow. The first aim is to make it do what I need it to do, nothing more, nothing less. That said, I'll be happy to try and do more, if needed.

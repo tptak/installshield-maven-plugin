@@ -3,7 +3,7 @@
         <name>${project.name}</name>
     </bannerLeft>
     <bannerRight>
-        <src></src>
+        <src>images/logos/maven-feather.png</src>
     </bannerRight>
 
     <body>
@@ -14,6 +14,9 @@
             <item name="Goals" href="plugin-info.html"/>
             <item name="FAQ" href="faq.html"/>
             
+        </menu>
+        <menu name="Examples">
+            <item name="01 - basic prerequisite project" href="examples/01-basic-prerequisite-project.html"/>
         </menu>
         <menu ref="reports" />
     </body>

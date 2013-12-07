@@ -1,0 +1,28 @@
+
+ pom.xml:
+
++---
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>pl.net.ptak</groupId>
+  <artifactId>basic-project</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>prz</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>pl.net.ptak</groupId>
+        <artifactId>installshield-maven-plugin</artifactId>
+        <extensions>true</extensions>
+        <version>0.0.1-SNAPSHOT</version>
+        <configuration>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
++---
+
+ TBC
