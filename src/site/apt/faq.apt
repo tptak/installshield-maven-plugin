@@ -1,0 +1,15 @@
+Frequently Asked Questions
+
+%{toc|section=1|fromDepth=2|toDepth=3}
+ 
+* General questions
+
+** I want to use the plugin. Where to start?
+
+ Download the sources, run:
+ 
++---
+mvn clean install
++---
+
+ Then look at examples and fire away.
