@@ -54,6 +54,21 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
+ * Copies files for packaging into a folder which will be archived and prepares prerequisite. <br>
+ * What will be selected for packaging:
+ * <ul>
+ * <li>All static files</li>
+ * <li>Full content of DiskImages folder (if there are more DiskImages folders, only the first one is included, rest is
+ * ignored)</li>
+ * <li>Files from dependency folder referenced in prerequisite</li>
+ * </ul>
+ * What's done to prerequisite:
+ * <ul>
+ * <li>paths are updated to point to right files</li>
+ * <li>checksums are updated</li>
+ * <li>sizes are updated</li>
+ * </ul>
+ * 
  * @author Tomasz Ptak
  */
 @Mojo( name = "prq-prepackage" )

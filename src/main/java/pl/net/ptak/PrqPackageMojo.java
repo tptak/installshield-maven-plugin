@@ -33,6 +33,8 @@ import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 
 /**
+ * Packs the folder and selects the archive as an artifact.
+ * 
  * @author Tomasz Ptak
  */
 @Mojo( name = "prq-package" )

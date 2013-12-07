@@ -1,0 +1,21 @@
+installshield-maven-plugin packaging types
+
+  Plugin offers following packaging types:
+  
+  * {{{prz}prz}} - a package containing a prerequisite file, for reuse in other InstallShield projects (in installshield-maven-plugin, of course!)
+  
+* Packaging types description
+
+** {prz}
+
+  This packaging type covers the most common dependency lifecycle for working with InstallShield. The project has following structure:
+  
++--
+is-project
+|-- src
+|   |-- resources
+|   `-- static
+|-- is-project.ism
+|-- is-project.prq
+`-- pom.xml
++--

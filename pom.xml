@@ -4,7 +4,7 @@
 
     <groupId>pl.net.ptak</groupId>
     <artifactId>installshield-maven-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>${is-mvn.version}${version.modifier}</version>
     <packaging>maven-plugin</packaging>
 
     <name>InstallShield Maven Plugin</name>
@@ -44,6 +44,8 @@
     <properties>
         <scm.branch>master</scm.branch>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <is-mvn.version>0.0.1</is-mvn.version>
+        <version.modifier></version.modifier>
     </properties>
 
     <dependencies>
@@ -148,11 +150,19 @@
                             <goal>helpmojo</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
+                <version>3.3</version>
             </plugin>
         </plugins>
     </build>
@@ -162,6 +172,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <configLocation>config/maven_checks.xml</configLocation>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -186,6 +199,11 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>3.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
                 <configuration>
                     <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
@@ -207,6 +225,12 @@
     </reporting>
 
     <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <version.modifier>-SNAPSHOT</version.modifier>
+            </properties>
+        </profile>
         <profile>
             <id>run-its</id>
             <build>

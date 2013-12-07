@@ -95,7 +95,7 @@ public class InstallShieldBuildMojo
             installshieldOutputDirectory.mkdirs();
         }
 
-        if ( ( installshieldProjectFile == null || !installshieldProjectFile.exists() ) )
+        if ( installshieldProjectFile == null || !installshieldProjectFile.exists() )
         {
             if ( failWhenNoInstallshieldFile )
             {

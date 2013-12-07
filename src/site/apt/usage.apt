@@ -1,0 +1,41 @@
+Usage
+
+  There's a couple thing you should take into consideration when working with the plugin. 
+  
+* Preparing for work with the InstallShield project
+
+  To start working with the project run
+  
++--
+mvn clean generate-sources
++--
+  
+  The result will be all dependencies in target directory, along with static files (from src/static).
+
+  Note that resources files will not be copied. They are intended to be referenced from the InstallShield project file only like custom actions and others which will be packaged in the installer.
+
+  Remember to reference static files and dependencies from the target folder, not from src.
+
+  Once you want to test your installer, run 
+  
++--
+mvn compile
++--
+
+  The result of compile will be placed in target/output folder.
+  
+  <<Word of wisdom>>: Do not use absolute paths unless not avoidable. This will kill portability of your project. The most wise thing is to use ISPROJECTDIR path variable and files within the project's folder only.
+
+* Preparing a prerequisite file
+
+  Once you have the installer built the way you want it to be, it's time to prepare the prerequisite file. Note that you'll have to do it once only - if you don't change the list of files of course. The plugin will calculate the checksums and file sizes.
+  
+  All files referenced in the prerequisite must be in target/dependency, target/static or target/output/.../DiskImages. The build will fail otherwise.
+  
+  To verify if everythings ok, run
+  
++--
+mvn package
++--
+
+  If all's well, you'll get a prz file in target.

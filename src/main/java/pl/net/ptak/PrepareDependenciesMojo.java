@@ -54,6 +54,9 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import pl.net.ptak.helpers.LoggerImplementation;
 
 /**
+ * Copies all dependencies to dependencyFolder, copies static files to staticFilesTargetFolder, unpacks what needs
+ * unpacking
+ * 
  * @author Tomasz Ptak
  */
 @Mojo( name = "prepare-dependencies", requiresDependencyResolution = ResolutionScope.COMPILE )
@@ -94,7 +97,7 @@ public class PrepareDependenciesMojo
     private File staticFilesTargetFolder;
 
     /**
-     * List of artifact to unzip. This is done by simple startsWith comparison on Artifact identifier in form
+     * List of artifacts to unzip. This is done by simple startsWith comparison on Artifact identifier in form
      * groupId:artifactId:type:version. If you enter an empty unzip, or the list is empty or not provided, nothing will
      * be extracted.
      */
@@ -117,6 +120,13 @@ public class PrepareDependenciesMojo
         executeMojoWithLogs( "org.apache.maven.plugins", "maven-dependency-plugin", "2.8", "copy-dependencies",
             configuration() );
 
+        unzipDependenciesIfNeeded();
+        copyStaticFiles();
+    }
+
+    private void unzipDependenciesIfNeeded()
+        throws MojoFailureException
+    {
         if ( dependencyFolder.exists() )
         {
             ZipUnArchiver unpacker = new ZipUnArchiver();
@@ -195,6 +205,11 @@ public class PrepareDependenciesMojo
         {
             getLog().info( "No dependencies to extract" );
         }
+    }
+
+    private void copyStaticFiles()
+        throws MojoFailureException
+    {
         try
         {
             if ( staticFilesFolder.exists() )
