@@ -1,5 +1,20 @@
+Basic Prerequisite Project
 
- pom.xml:
+ Let's start with the simplest project possible. It is a simple project with a custom action in an external file. Let's call it basic-project
+ 
+ The structure of the project folders:
+
++---
+basic-project
+|-- src
+|   `-- resources
+|       `-- CustomAction.vbs
+|-- basic-project.ism
+|-- basic-project.prq
+`-- pom.xml
++---
+
+ Let's have a look at pom.xml:
 
 +---
 <project>
@@ -23,6 +38,27 @@
     </plugins>
   </build>
 </project>
++---
+
+ In such case you don't need to run <<<mvn generate-sources>>> first - there's nothing to place in the target directory at this stage.
+ 
+ Modify the project to your likes and needs, then run <<<mvn clean compile>>>. The result will be in target\output folder:
+ 
++---
+basic-project
+|-- src
+|   `-- resources
+|       `-- CustomAction.vbs
+|-- target
+|   `-- output
+|       `-- ...
+|           `-- ...
+|               |-- DiskImages
+|               |   `-- ...
+|               `-- ...
+|-- basic-project.ism
+|-- basic-project.prq
+`-- pom.xml
 +---
 
  TBC

@@ -13,3 +13,8 @@ mvn clean install
 +---
 
  Then look at examples and fire away.
+ 
+** I cannot find InstallShield in the plugin
+
+ Yourself/Your Company is the party responsible for getting InstallShield from Flexera to use the plugin.
+
