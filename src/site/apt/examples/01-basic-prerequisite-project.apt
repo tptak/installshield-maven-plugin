@@ -61,4 +61,36 @@ basic-project
 `-- pom.xml
 +---
 
- TBC
+ Now is the time to create/edit a prq file. Make sure that everything referenced in prq file is within the target directory.
+
+ When you run mvn clean package, this will be the directory structure:
+
++---
+basic-project
+|-- src
+|   `-- resources
+|       `-- CustomAction.vbs
+|-- target
+|   |-- basic-project
+|   |   |-- basic-project
+|   |   |   `-- DiskImages
+|   |   |       `-- ...
+|   |   `-- basic-project.prq
+|   |-- output
+|   |   `-- ...
+|   |       `-- ...
+|   |           |-- DiskImages
+|   |           |   `-- ...
+|   |           `-- ...
+|   `-- basic-project.prz
+|-- basic-project.ism
+|-- basic-project.prq
+`-- pom.xml
++---
+
+ You can see that within the target folder a subfolder basic-project is created and a file called basic-project.prz is there as well. In short, basic-project.prz is the target\basic-project zipped with a custom extension.
+
+ Within the target\basic-project\basic-project folder you can see the DiskImages folder copied from target\output - it's the first DiskImages folder found in the output directory. Other DiskImages folders will be ignored and no DiskImages folder will result in build failure.
+
+ There's also a basic-project.prq file in there - this is <<almost>> the same file. The difference is that files paths from the original prq file have been modified to point to files within the target\basic-project\basic-project. Also Checksum and FileSize are recalculated for each file listed.
+
