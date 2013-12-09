@@ -372,7 +372,8 @@ public class PrqPrePackageMojo
                 File copyTarget = new File( prePackageInstallerSubFolder, relativeOutputPath );
                 FileUtils.copyFileToDirectory( dependencyFile, copyTarget );
             }
-            else if ( canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
+            else if ( null != packagedDiskImagesFolder
+                && canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
             {
                 // IS: ./target/output/something/something/DiskImages/....
                 // SHOUD BE: ./target/${project.artifactId}/DiskImages/....
