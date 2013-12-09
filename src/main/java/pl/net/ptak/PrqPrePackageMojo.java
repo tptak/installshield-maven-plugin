@@ -370,6 +370,11 @@ public class PrqPrePackageMojo
                     calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
 
                 File copyTarget = new File( prePackageInstallerSubFolder, relativeOutputPath );
+
+                getLog().info(
+                    String.format( "Copying dependency file %s to %s", dependencyFile.getCanonicalPath(),
+                        copyTarget.getParentFile().getCanonicalPath() ) );
+
                 FileUtils.copyFile( dependencyFile, copyTarget );
             }
             else if ( null != packagedDiskImagesFolder
@@ -416,6 +421,10 @@ public class PrqPrePackageMojo
 
         dependencyFileAttr.setValue( newRelativePath );
 
+        getLog().debug(
+            String.format( "New relative path for %s was set to %s",
+                dependencyFile.getCanonicalPath(), newRelativePath ) );
+
         return relativeOutputPath;
     }
 
@@ -446,6 +455,9 @@ public class PrqPrePackageMojo
                 {
                     staticFilesCopyDestination.mkdirs();
                 }
+                getLog().info(
+                    String.format( "Copying directory structure from %s to %s",
+                        staticFilesTargetFolder.getCanonicalPath(), staticFilesCopyDestination.getCanonicalPath() ) );
                 org.codehaus.plexus.util.FileUtils.copyDirectoryStructure( staticFilesTargetFolder,
                     staticFilesCopyDestination );
             }
