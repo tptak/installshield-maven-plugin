@@ -370,7 +370,7 @@ public class PrqPrePackageMojo
                     calculateAndSetNewRelativePath( dependencyFile, targetFolder, dependencyFileAttr );
 
                 File copyTarget = new File( prePackageInstallerSubFolder, relativeOutputPath );
-                FileUtils.copyFileToDirectory( dependencyFile, copyTarget );
+                FileUtils.copyFile( dependencyFile, copyTarget );
             }
             else if ( null != packagedDiskImagesFolder
                 && canonicalPath.startsWith( packagedDiskImagesFolder.getCanonicalPath() ) )
