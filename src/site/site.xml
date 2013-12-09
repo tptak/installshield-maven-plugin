@@ -17,6 +17,7 @@
         </menu>
         <menu name="Examples">
             <item name="01 - basic prerequisite project" href="examples/01-basic-prerequisite-project.html"/>
+            <item name="02 - prerequisite without ism file" href="examples/02-prerequisite-without-ism.html"/>
         </menu>
         <menu ref="reports" />
     </body>
