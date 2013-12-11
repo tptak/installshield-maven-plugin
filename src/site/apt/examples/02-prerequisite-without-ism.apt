@@ -1,0 +1,68 @@
+Prerequisite Without InstallShield Project files (with a static file)
+
+ Now let's say we have an installer already and want to provide it as a prz project. As an example, let's prepare an installer for PostgreSQL. But let's add a little extra: let's assume we need to wrap an installer with a batch script. The script in the example will be simple, it will just run the installer.
+
+ You'll need an installer for PostgreSQL and add it to your Maven repository - at least the local one. I used version 9.3.2 of PostgreSQL. To install the file run the following command:
+
++---
+mvn install:install-file -DgroupId=org.postgresql -DartifactId=postgresql-windows-installer -Dversion=9.3.2_x64 -Dpackaging=exe -Dfile=postgresql-9.3.2-1-windows-x64.exe
++---
+
+ Let's have a look at the project directory tree:
+
++---
+postgres-installer
+|-- src
+|   `-- static
+|       `-- run.bat
+|-- postgres-installer.prq
+`-- pom.xml
++---
+
+ The batch file run.bat will look like this:
+ 
++---
+call %1/postgresql-windows-installer-9.3.2_x64.exe
++---
+
+ Let's have a look at pom.xml:
+ 
++---
+<project>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>pl.net.ptak</groupId>
+    <artifactId>postgres-installer</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>prz</packaging>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>pl.net.ptak</groupId>
+                <artifactId>installshield-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <failWhenNoInstallshieldFile>false</failWhenNoInstallshieldFile>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql-windows-installer</artifactId>
+            <version>9.3.2_x64</version>
+            <type>exe</type>
+        </dependency>
+    </dependencies>
+</project>
++---
+
+ Notice that <<<failWhenNoInstallshieldFile>>> is set to false - without it the build would fail, as by default it expects both the ism project file and later the build output.
+ 
+ Also notice that prq file is still required - without it the plugin would not know which files must be included in the build deliverable.
+ 
+ Now run <<<mvn generate-sources>>> to get files in the target folder. The result will be following:
+ 
+ 
