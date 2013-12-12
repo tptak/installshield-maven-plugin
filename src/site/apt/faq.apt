@@ -18,3 +18,7 @@ mvn clean install
 
  Yourself/Your Company is the party responsible for getting InstallShield from Flexera to use the plugin.
 
+** What is the difference between src/resources and src/static folders?
+
+ All files from src/static folder are copied into /target/static folder, and eventually make it into the prz archive. They may be referenced in prq files.
+ Files from src/resources are not copied. They are included in the installer if they are referenced by it. Note that they are not available as separate files - InstallShield does the magic of including it in its deliverables. They may NOT be referenced in prq files.

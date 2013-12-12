@@ -64,5 +64,59 @@ call %1/postgresql-windows-installer-9.3.2_x64.exe
  Also notice that prq file is still required - without it the plugin would not know which files must be included in the build deliverable.
  
  Now run <<<mvn generate-sources>>> to get files in the target folder. The result will be following:
+
++---
+postgres-installer
+|-- src
+|   `-- static
+|       `-- run.bat
+|-- target
+|   |-- dependency
+|   |   `-- postgresql-windows-installer-9.3.2_x64.exe
+|   `-- static
+|       `-- run.bat
+|-- postgres-installer.prq
+`-- pom.xml
++---
  
+ This is time to configure your postgres-installer.prq file. I won't get into too much detail as you'll most probably be using the neat prerequisite editor from the suite. Remember to reference files from within the target folder, otherwise you'll be getting errors. You'll end up with something like this in your prq if you open it in a text editor:
  
++---
+...
+<files>
+    <file LocalFile=".\target\dependency\postgresql-windows-installer-9.3.2_x64.exe" CheckSum="..." FileSize="..."></file>
+    <file LocalFile=".\target\static\run.bat" CheckSum="..." FileSize="..."></file>
+</files>
+... 
++---
+
+ All that's left is to run <<<mvn clean package>>> (or <<<install>>>, or <<<deploy>>>). This will leave us with following structure:
+
++---
+postgres-installer
+|-- src
+|   `-- static
+|       `-- run.bat
+|-- target
+|   |-- dependency
+|   |   `-- postgresql-windows-installer-9.3.2_x64.exe
+|   |-- output
+|   |-- postgres-installer
+|   |   |-- postgres-installer
+|   |   |   |-- dependency
+|   |   |   |   `-- postgresql-windows-installer-9.3.2_x64.exe
+|   |   |   `-- static
+|   |   |       `-- run.bat
+|   |   `-- postgres-installer.prq
+|   |-- static
+|   |   `-- run.bat
+|   `-- postgres-installer.prz
+|-- postgres-installer.prq
+`-- pom.xml
++---
+
+ You can see that within the target folder a subfolder basic-project is created and a file called postgres-installer.prz is there as well. In short, postgres-installer.prz is the target\postgres-installer zipped with a custom extension.
+
+ Within the target\postgres-installer\postgres-installer folder you can see the static folder copied from target\static. There is also dependency folder, but it contains only files referenced within the prerequisite file. That's how it works: all static files are copied, all DiskImages (if there is InstallShield project built) and only referenced dependencies.
+
+ There's also a postgres-installer.prq file in there - this is <<almost>> the same file. The difference is that files paths from the original prq file have been modified to point to files within the target\postgres-installer\postgres-installer. Note that all paths are relative. Also Checksum and FileSize are recalculated for each file listed.

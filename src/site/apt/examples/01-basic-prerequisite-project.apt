@@ -63,7 +63,7 @@ basic-project
 
  Now is the time to create/edit a prq file. Make sure that everything referenced in prq file is within the target directory.
 
- When you run mvn clean package, this will be the directory structure:
+ When you run <<<mvn clean package>>>, this will be the directory structure:
 
 +---
 basic-project
@@ -92,5 +92,5 @@ basic-project
 
  Within the target\basic-project\basic-project folder you can see the DiskImages folder copied from target\output - it's the first DiskImages folder found in the output directory. Other DiskImages folders will be ignored and no DiskImages folder will result in build failure.
 
- There's also a basic-project.prq file in there - this is <<almost>> the same file. The difference is that files paths from the original prq file have been modified to point to files within the target\basic-project\basic-project. Also Checksum and FileSize are recalculated for each file listed.
+ There's also a basic-project.prq file in there - this is <<almost>> the same file. The difference is that files paths from the original prq file have been modified to point to files within the target\basic-project\basic-project. Note that all paths are relative. Also Checksum and FileSize are recalculated for each file listed.
 

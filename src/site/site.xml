@@ -18,6 +18,8 @@
         <menu name="Examples">
             <item name="01 - basic prerequisite project" href="examples/01-basic-prerequisite-project.html"/>
             <item name="02 - prerequisite without ism file" href="examples/02-prerequisite-without-ism.html"/>
+            <item name="03 - prerequisite with files built into the installer" href="examples/03-prerequisite-with-files-built-into-the-installer.html"/>
+            <item name="04 - prerequisite with prz dependency" href="examples/04-prerequisite-with-prz-dependency.html"/>
         </menu>
         <menu ref="reports" />
     </body>
