@@ -49,9 +49,11 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
+import org.codehaus.plexus.components.io.fileselectors.FileSelector;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import pl.net.ptak.helpers.LoggerImplementation;
+import pl.net.ptak.helpers.Unzip;
 
 /**
  * Copies all dependencies to dependencyFolder, copies static files to staticFilesTargetFolder, unpacks what needs
@@ -97,12 +99,46 @@ public class PrepareDependenciesMojo
     private File staticFilesTargetFolder;
 
     /**
-     * List of artifacts to unzip. This is done by simple startsWith comparison on Artifact identifier in form
-     * groupId:artifactId:type:version. If you enter an empty unzip, or the list is empty or not provided, nothing will
-     * be extracted.
+     * List of artifacts to unzip. <br>
+     * Each unzip entry should look like this<br>
+     * 
+     * <pre>
+     *  &lt;unzip>
+     *      &lt;what>what_to_unpack&lt;/what>          &lt;-- determines what to unpack
+     *      &lt;where>where_to_unpack_it&lt;/where>    &lt;-- (optional) where to unpack it within target/dependency
+     *      &lt;files>                              &lt;-- (optional) what to unpack from the source zip
+     *          &lt;includes>                              &lt;-- (optional)
+     *              &lt;include>some/path/&lowast;&lowast;/&lowast;&lt;/include>
+     *          &lt;/includes>
+     *          &lt;excludes>                              &lt;-- (optional)
+     *              &lt;exclude>some/path/inside/exclude_this_file.txt&lt;/exclude>
+     *          &lt;/excludes>
+     *          &lt;caseSensitive>true&lt;/caseSensitive> &lt;-- (optional)
+     *      &lt;/files>
+     *  &lt;/unzip>
+     * </pre>
+     * 
+     * Now a couple explanations:
+     * <ul>
+     * <li>what_to_unpack - This is selected by simple startsWith comparison on Artifact identifier in form
+     * groupId:artifactId:type:version. If you write just a part of that, it will still work. If more than one element
+     * is found, all will be unpacked.</li>
+     * <li>where_to_unpack_it - optional, by default output folder is artifactId_type, eg. super-artifact_zip</li>
+     * <li>Even if you select a subfolder to extract, the whole folder path is preserved in extracted folder</li>
+     * </ul>
+     * While the form above looks scary, the simplest form is:
+     * 
+     * <pre>
+     *  &lt;unzip>
+     *      &lt;what>what_to_unpack&lt;/what>
+     *  &lt;/unzip>
+     * </pre>
+     * 
+     * <br>
+     * If you enter an empty unzips element, or the list is not provided, nothing will be extracted.
      */
-    @Parameter( property = "unzip" )
-    private List<String> unzip;
+    @Parameter( property = "unzips" )
+    private List<Unzip> unzips;
 
     @Component( role = BuildPluginManager.class )
     private BuildPluginManager pluginManager;
@@ -144,36 +180,42 @@ public class PrepareDependenciesMojo
                 unpacker.extract();
             }
 
-            if ( !( null == unzip || unzip.isEmpty() ) )
+            if ( !( null == unzips || unzips.isEmpty() ) )
             {
                 getLog().info( "Unpack zip-compressed files" );
                 Set<Artifact> artifacts = project.getArtifacts();
-                Map<String, String> targetFoldersForFiles = new HashMap<String, String>();
+                Map<String, Unzip> unzipsForFiles = new HashMap<String, Unzip>();
 
                 for ( Artifact artifact : artifacts )
                 {
-                    for ( String unzipSelection : unzip )
+                    for ( Unzip unzipSelection : unzips )
                     {
-
-                        if ( artifact.toString().startsWith( unzipSelection ) )
+                        if ( artifact.toString().startsWith( unzipSelection.getWhat() ) )
                         {
-                            targetFoldersForFiles.put( artifact.getFile().getName(),
-                                String.format(
+                            if ( unzipSelection.getWhere() == null )
+                            {
+                                unzipSelection.setWhere(  String.format(
                                     "%s_%s",
                                     artifact.getArtifactId(),
                                     artifact.getType() ) );
                         }
+                            unzipsForFiles.put( artifact.getFile().getName(),
+                                unzipSelection );
+                        }
                     }
                 }
-                if ( !targetFoldersForFiles.isEmpty() )
+                if ( !unzipsForFiles.isEmpty() )
                 {
                     Collection<File> subfolderUnpackFiles = FileUtils.listFiles( dependencyFolder, null, false );
                     for ( File subfolderUnpackFile : subfolderUnpackFiles )
                     {
-                        if ( targetFoldersForFiles.containsKey( subfolderUnpackFile.getName() ) )
+                        if ( unzipsForFiles.containsKey( subfolderUnpackFile.getName() ) )
                         {
+                            Unzip unzipSelection = unzipsForFiles.get( subfolderUnpackFile.getName() );
+
+                                            
                             File destDirectory = new File( dependencyFolder,
-                                                           targetFoldersForFiles.get( subfolderUnpackFile.getName() ) );
+                                unzipSelection.getWhere() );
                             try
                             {
                                 getLog().info(
@@ -189,6 +231,12 @@ public class PrepareDependenciesMojo
                                 throw new MojoFailureException( "Failed to extract a zip file", e );
                             }
                             unpacker.setSourceFile( subfolderUnpackFile );
+                            unpacker.setOverwrite( false );
+                            if ( unzipSelection.getFiles() != null )
+                            {
+                                FileSelector[] fileSelectors = { unzipSelection.getFiles(), };
+                                unpacker.setFileSelectors( fileSelectors );
+                            }
                             unpacker.setDestDirectory(
                                     destDirectory );
                             unpacker.extract();
