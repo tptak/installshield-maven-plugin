@@ -21,6 +21,8 @@ package pl.net.ptak;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -75,6 +77,33 @@ public class InstallShieldBuildMojo
     private String installshieldExecutable;
 
     /**
+     * Use pom version for the InstallShield project being built. When set to true, version from project pom will be
+     * passed to InstallShield through -y parameter.
+     */
+    @Parameter( property = "usePomVersion", defaultValue = "true", required = false )
+    private boolean usePomVersion;
+
+    /** The product configuration. If set, it will be passed to InstallShield through -a parameter */
+    @Parameter( property = "productConfiguration" )
+    private String productConfiguration;
+
+    /** The product release. If set, it will be passed to InstallShield through -r parameter */
+    @Parameter( property = "productRelease" )
+    private String productRelease;
+
+    /**
+     * The properties. If any values are passed, they will be passed to InstallShield each with -z parameter.<br>
+     */
+    @Parameter( property = "properties" )
+    private TreeMap<String, String> properties;
+
+    /**
+     * The path variables. If any values are passed, they will be passed to InstallShield each with -l parameter.<br>
+     */
+    @Parameter( property = "pathVariables" )
+    private TreeMap<String, String> pathVariables;
+
+    /**
      * Verifies that configuration is satisfied to bild the project and builds it.
      * 
      * @throws MojoExecutionException when plugin is misconfigured
@@ -122,11 +151,40 @@ public class InstallShieldBuildMojo
 
             addCmdLnArguments( installshieldCommandLine, "-p", canonicalProjectFilePath );
             addCmdLnArguments( installshieldCommandLine, "-b", canonicalOutputDirectoryPath );
-            if ( null != version && !version.isEmpty() )
+            if ( usePomVersion && null != version && !version.isEmpty() )
             {
                 addCmdLnArguments( installshieldCommandLine, "-y", version );
 
             }
+
+            if ( null != productConfiguration && !productConfiguration.isEmpty() )
+            {
+                addCmdLnArguments( installshieldCommandLine, "-a", productConfiguration );
+            }
+
+            if ( null != productRelease && !productRelease.isEmpty() )
+            {
+                addCmdLnArguments( installshieldCommandLine, "-r", productRelease );
+            }
+
+            if ( null != properties && !properties.isEmpty() )
+            {
+                for ( Entry<String, String> entry : properties.entrySet() )
+                {
+                    addCmdLnArguments( installshieldCommandLine, "-z",
+                        String.format( "%s=%s", entry.getKey(), entry.getValue() ) );
+                }
+            }
+
+            if ( null != pathVariables && !pathVariables.isEmpty() )
+            {
+                for ( Entry<String, String> entry : pathVariables.entrySet() )
+                {
+                    addCmdLnArguments( installshieldCommandLine, "-l",
+                        String.format( "%s=%s", entry.getKey(), entry.getValue() ) );
+                }
+            }
+
             Executor exec = new DefaultExecutor();
 
             getLog().debug(
